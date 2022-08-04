@@ -72,18 +72,19 @@ func (vm *ParityTrace) VMTraceVariantTransaction(ctx context.Context, txHash cor
 	return result, output, nil
 }
 
-func (vm *ParityTrace) VMTraceVariantBlock(ctx context.Context, bkNum string) ([]struct{Result VMTracerService}, error) {
+func (vm *ParityTrace) VMTraceVariantBlock(ctx context.Context, bkNum string) ([]struct{ Result VMTracerService }, error) {
 	client, err := vm.stack.Attach()
-	if err != nil {return nil, err}
+	if err != nil {
+		return nil, err
+	}
 
 	tr := []struct {
 		Result VMTracerService
-		}{}
-		err = client.Call(&tr, "debug_traceBlockByNumber", bkNum, map[string]string{"tracer": "plugethVMTracer"})
-		r := tr
-		return r, nil
-	}
-
+	}{}
+	err = client.Call(&tr, "debug_traceBlockByNumber", bkNum, map[string]string{"tracer": "plugethVMTracer"})
+	r := tr
+	return r, nil
+}
 
 func getData(data []byte, start uint64, size uint64) []byte {
 	length := uint64(len(data))
@@ -99,16 +100,14 @@ func getData(data []byte, start uint64, size uint64) []byte {
 	return d
 }
 
-
 type VMTracerService struct {
-
 	StateDB      core.StateDB
 	CurrentTrace *VMTrace
 	Output       hexutil.Bytes
 	Mem          Mem
 	Store        Store
 	warmAccess   bool
-	log core.Logger
+	log          core.Logger
 }
 
 func (r *VMTracerService) CaptureStart(from core.Address, to core.Address, create bool, input []byte, gas uint64, value *big.Int) {

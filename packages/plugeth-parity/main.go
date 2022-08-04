@@ -1,7 +1,5 @@
 package main
 
-
-
 import (
 	"context"
 
@@ -14,18 +12,18 @@ import (
 )
 
 type FinalResult struct {
-	Output    string               `json:"output"`
-	StateDiff map[string]*LayerTwo `json:"stateDiff"`
-	Trace     []*ParityResult      `json:"trace"`
-	TransactionHash *core.Hash      `json:"transactionHash,omitempty"`
-	VMTrace   interface{}          `json:"vmTrace"`
+	Output          string               `json:"output"`
+	StateDiff       map[string]*LayerTwo `json:"stateDiff"`
+	Trace           []*ParityResult      `json:"trace"`
+	TransactionHash *core.Hash           `json:"transactionHash,omitempty"`
+	VMTrace         interface{}          `json:"vmTrace"`
 }
 
 type RawData struct {
-        TraceVar [][]*ParityResult
-        SDVar []struct{Result SDTracerService}
-        VMVar []struct{Result VMTracerService}
-        Outputs [][]string
+	TraceVar [][]*ParityResult
+	SDVar    []struct{ Result SDTracerService }
+	VMVar    []struct{ Result VMTracerService }
+	Outputs  [][]string
 }
 
 type ParityTrace struct {
@@ -33,12 +31,12 @@ type ParityTrace struct {
 	stack   core.Node
 }
 
-var Tracers = map[string]func(core.StateDB,  core.BlockContext) core.TracerResult{
+var Tracers = map[string]func(core.StateDB, core.BlockContext) core.TracerResult{
 	"plugethVMTracer": func(sdb core.StateDB, bctx core.BlockContext) core.TracerResult {
-		return &VMTracerService{StateDB: sdb, log:log}
+		return &VMTracerService{StateDB: sdb, log: log}
 	},
 	"plugethStateDiffTracer": func(sdb core.StateDB, bctx core.BlockContext) core.TracerResult {
-		return &SDTracerService{stateDB: sdb, blockContext: bctx, log:log}
+		return &SDTracerService{stateDB: sdb, blockContext: bctx, log: log}
 	},
 }
 
@@ -67,7 +65,7 @@ func Initialize(ctx *cli.Context, loader core.PluginLoader, logger core.Logger) 
 	}
 }
 
-func (pt *ParityTrace) blockStringProcessing (ctx context.Context, bkNum string) (string, error) {
+func (pt *ParityTrace) blockStringProcessing(ctx context.Context, bkNum string) (string, error) {
 	var err error
 	var currentBlockString string
 	var currentBlockUint64 uint64
@@ -83,9 +81,9 @@ func (pt *ParityTrace) blockStringProcessing (ctx context.Context, bkNum string)
 	}
 	switch bkNum {
 	case "latest":
-		result = hexutil.EncodeUint64(currentBlockUint64 -1)
+		result = hexutil.EncodeUint64(currentBlockUint64 - 1)
 	case "pending":
-		result = hexutil.EncodeUint64(currentBlockUint64 -2)
+		result = hexutil.EncodeUint64(currentBlockUint64 - 2)
 	case "earliest":
 		result = hexutil.EncodeUint64(0)
 	default:
@@ -108,25 +106,29 @@ func (pt *ParityTrace) Call(ctx context.Context, txObject map[string]interface{}
 		return nil, err
 	}
 
-
 	for _, typ := range tracerType {
 		if typ == "trace" {
-				result.Trace, output, err = pt.TraceVariantCall(ctx, txObject, bn)
-				if err != nil {return nil, err}
+			result.Trace, output, err = pt.TraceVariantCall(ctx, txObject, bn)
+			if err != nil {
+				return nil, err
 			}
+		}
 		if typ == "vmTrace" {
-			  result.VMTrace, output, err = pt.VMTraceVariantCall(ctx, txObject, bn)
-					if err != nil {return nil, err}
+			result.VMTrace, output, err = pt.VMTraceVariantCall(ctx, txObject, bn)
+			if err != nil {
+				return nil, err
 			}
+		}
 		if typ == "stateDiff" {
 			result.StateDiff, output, err = pt.StateDiffVariantCall(ctx, txObject, bn)
-				if err != nil {return nil, err}
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	result.Output = output
 	return result, nil
 }
-
 
 func (pt *ParityTrace) RawTransaction(ctx context.Context, data hexutil.Bytes, tracerType []string) (interface{}, error) {
 	result := &FinalResult{}
@@ -163,18 +165,24 @@ func (pt *ParityTrace) RawTransaction(ctx context.Context, data hexutil.Bytes, t
 
 	for _, typ := range tracerType {
 		if typ == "trace" {
-				result.Trace, output, err = pt.TraceVariantCall(ctx, txObject, bn)
-				if err != nil {return nil, err}
-				}
+			result.Trace, output, err = pt.TraceVariantCall(ctx, txObject, bn)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if typ == "vmTrace" {
-			  result.VMTrace, output, err = pt.VMTraceVariantCall(ctx, txObject, bn)
-					if err != nil {return nil, err}
-		    }
+			result.VMTrace, output, err = pt.VMTraceVariantCall(ctx, txObject, bn)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if typ == "stateDiff" {
 			result.StateDiff, output, err = pt.StateDiffVariantCall(ctx, txObject, bn)
-				if err != nil {return nil, err}
-				    }
+			if err != nil {
+				return nil, err
+			}
 		}
+	}
 	result.Output = output
 	return result, nil
 }
@@ -186,18 +194,24 @@ func (pt *ParityTrace) ReplayTransaction(ctx context.Context, txHash core.Hash, 
 
 	for _, typ := range tracerType {
 		if typ == "trace" {
-				result.Trace, output, err = pt.TraceVariantTransaction(ctx, txHash)
-				if err != nil {return nil, err}
-				}
+			result.Trace, output, err = pt.TraceVariantTransaction(ctx, txHash)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if typ == "vmTrace" {
-			  result.VMTrace, output, err = pt.VMTraceVariantTransaction(ctx, txHash)
-					if err != nil {return nil, err}
-		    }
+			result.VMTrace, output, err = pt.VMTraceVariantTransaction(ctx, txHash)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if typ == "stateDiff" {
 			result.StateDiff, output, err = pt.StateDiffVariantTransaction(ctx, txHash)
-				if err != nil {return nil, err}
-				    }
+			if err != nil {
+				return nil, err
+			}
 		}
+	}
 
 	result.Output = output
 	return result, nil
@@ -215,32 +229,38 @@ func (pt *ParityTrace) ReplayBlockTransactions(ctx context.Context, bkNum string
 
 	for _, typ := range tracerType {
 		if typ == "trace" {
-				raw.TraceVar, traceOutputs, err = pt.TraceVariantBlock(ctx, bn)
-					if err != nil {return nil, err}
-				for _, item := range traceOutputs {
-					traceOutputs = append(traceOutputs, item)
-					}
-					outputs = append(outputs, traceOutputs)
-				}
+			raw.TraceVar, traceOutputs, err = pt.TraceVariantBlock(ctx, bn)
+			if err != nil {
+				return nil, err
+			}
+			for _, item := range traceOutputs {
+				traceOutputs = append(traceOutputs, item)
+			}
+			outputs = append(outputs, traceOutputs)
+		}
 		if typ == "vmTrace" {
-				raw.VMVar, err = pt.VMTraceVariantBlock(ctx, bn)
-					if err != nil {return nil, err}
-				traceOutputs := []string{}
-				for _, item := range raw.VMVar {
-					traceOutputs = append(traceOutputs, hexutil.Encode(item.Result.Output))
-					}
-					outputs = append(outputs, traceOutputs)
-				}
+			raw.VMVar, err = pt.VMTraceVariantBlock(ctx, bn)
+			if err != nil {
+				return nil, err
+			}
+			traceOutputs := []string{}
+			for _, item := range raw.VMVar {
+				traceOutputs = append(traceOutputs, hexutil.Encode(item.Result.Output))
+			}
+			outputs = append(outputs, traceOutputs)
+		}
 		if typ == "stateDiff" {
 			raw.SDVar, err = pt.StateDiffVariantBlock(ctx, bn)
-				if err != nil {return nil, err}
+			if err != nil {
+				return nil, err
+			}
 			sdOutputs := []string{}
 			for _, item := range raw.SDVar {
 				sdOutputs = append(sdOutputs, hexutil.Encode(item.Result.Output))
 			}
 			outputs = append(outputs, sdOutputs)
-						}
 		}
+	}
 
 	blockNM, err := hexutil.DecodeUint64(bn)
 	if err != nil {
@@ -264,15 +284,15 @@ func (pt *ParityTrace) ReplayBlockTransactions(ctx context.Context, bkNum string
 		}
 		txHash := transactions[i].Hash()
 		results[i] = FinalResult{
-			Output: outputs[0][i],
+			Output:          outputs[0][i],
 			TransactionHash: &txHash,
 		}
 		if len(raw.TraceVar) > 0 {
-				results[i].Trace = raw.TraceVar[i]
-			}
+			results[i].Trace = raw.TraceVar[i]
+		}
 		if len(raw.VMVar) > 0 {
-				results[i].VMTrace = raw.VMVar[i].Result.CurrentTrace
-			}
+			results[i].VMTrace = raw.VMVar[i].Result.CurrentTrace
+		}
 		if len(raw.SDVar) > 0 {
 			results[i].StateDiff = raw.SDVar[i].Result.ReturnObj
 		}

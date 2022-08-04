@@ -10,7 +10,6 @@ import (
 	"github.com/openrelayxyz/plugeth-utils/core"
 	"github.com/openrelayxyz/plugeth-utils/restricted"
 	"github.com/openrelayxyz/plugeth-utils/restricted/hexutil"
-
 )
 
 type LayerTwo struct {
@@ -98,7 +97,7 @@ func (sd *ParityTrace) StateDiffVariantTransaction(ctx context.Context, txHash c
 	return result, output, err
 }
 
-func (sd *ParityTrace) StateDiffVariantBlock(ctx context.Context, bkNum string) ([]struct{Result SDTracerService}, error) {
+func (sd *ParityTrace) StateDiffVariantBlock(ctx context.Context, bkNum string) ([]struct{ Result SDTracerService }, error) {
 	client, err := sd.stack.Attach()
 	if err != nil {
 		return nil, err
@@ -114,23 +113,23 @@ func (sd *ParityTrace) StateDiffVariantBlock(ctx context.Context, bkNum string) 
 }
 
 type SDTracerService struct {
-	stateDB      core.StateDB
-	blockContext core.BlockContext
-	Output       hexutil.Bytes
-	Miner        core.Address
-	To           core.Address
-	From         core.Address
-	ReturnObj    map[string]*LayerTwo
-	ParityMiner core.Address
-	MinerInitBalance *big.Int
-	PMinerInitBalance *big.Int
-	storageValuesMap map[[2]string]string
+	stateDB            core.StateDB
+	blockContext       core.BlockContext
+	Output             hexutil.Bytes
+	Miner              core.Address
+	To                 core.Address
+	From               core.Address
+	ReturnObj          map[string]*LayerTwo
+	ParityMiner        core.Address
+	MinerInitBalance   *big.Int
+	PMinerInitBalance  *big.Int
+	storageValuesMap   map[[2]string]string
 	storageValuesSlice []map[[2]string]string
-	log core.Logger
+	log                core.Logger
 }
 
 type StorageKeys struct {
-	Address string
+	Address     string
 	StorageHash string
 }
 
@@ -139,9 +138,11 @@ func (r *SDTracerService) CapturePreStart(from core.Address, to *core.Address, i
 	r.ReturnObj = make(map[string]*LayerTwo)
 	r.Miner = r.blockContext.Coinbase
 	r.MinerInitBalance = r.stateDB.GetBalance(r.Miner)
-	if to != nil {if _, ok := r.ReturnObj[to.String()]; !ok {
-		r.ReturnObj[to.String()] = &LayerTwo{Storage: make(map[string]*Star), Balance: &Star{Interior{From: hexutil.EncodeBig(r.stateDB.GetBalance(*to))}, false}, Nonce: &Star{Interior{From: hexutil.EncodeUint64(r.stateDB.GetNonce(*to))}, false}, Code: &Star{Interior{From: hexutil.Encode(r.stateDB.GetCode(*to))}, false}}
-	}}
+	if to != nil {
+		if _, ok := r.ReturnObj[to.String()]; !ok {
+			r.ReturnObj[to.String()] = &LayerTwo{Storage: make(map[string]*Star), Balance: &Star{Interior{From: hexutil.EncodeBig(r.stateDB.GetBalance(*to))}, false}, Nonce: &Star{Interior{From: hexutil.EncodeUint64(r.stateDB.GetNonce(*to))}, false}, Code: &Star{Interior{From: hexutil.Encode(r.stateDB.GetCode(*to))}, false}}
+		}
+	}
 	if _, ok := r.ReturnObj[from.String()]; !ok {
 		r.ReturnObj[from.String()] = &LayerTwo{Storage: make(map[string]*Star), Balance: &Star{Interior{From: hexutil.EncodeBig(r.stateDB.GetBalance(from))}, false}, Nonce: &Star{Interior{From: hexutil.EncodeUint64(r.stateDB.GetNonce(from))}, false}, Code: &Star{Interior{From: hexutil.Encode(r.stateDB.GetCode(from))}, false}}
 	}
@@ -163,21 +164,21 @@ func (r *SDTracerService) CaptureState(pc uint64, op core.OpCode, gas, cost uint
 		addr := scope.Contract().Address().String()
 		keys := [2]string{addr, storageHash}
 		if len(r.storageValuesSlice) > 0 {
-		r.storageValuesSlice[len(r.storageValuesSlice) - 1][keys] = storageTo
-	}
-	if _, ok := r.ReturnObj[addr]; !ok {
-		to := scope.Contract().Address()
-		r.ReturnObj[addr] = &LayerTwo{
-			Storage: make(map[string]*Star),
-			Balance: &Star{Interior{
-				From: hexutil.EncodeBig(r.stateDB.GetBalance(to))}, false},
-			Nonce: &Star{Interior{From: hexutil.EncodeUint64(r.stateDB.GetNonce(to))}, false},
-			Code: &Star{Interior{From: hexutil.Encode(r.stateDB.GetCode(to))}, false}}
-	}
-			if _, ok := r.ReturnObj[addr].Storage[storageHash]; !ok {
-				r.ReturnObj[addr].Storage[storageHash] = &Star{Interior{From: storageFrom}, false}
-			}
+			r.storageValuesSlice[len(r.storageValuesSlice)-1][keys] = storageTo
 		}
+		if _, ok := r.ReturnObj[addr]; !ok {
+			to := scope.Contract().Address()
+			r.ReturnObj[addr] = &LayerTwo{
+				Storage: make(map[string]*Star),
+				Balance: &Star{Interior{
+					From: hexutil.EncodeBig(r.stateDB.GetBalance(to))}, false},
+				Nonce: &Star{Interior{From: hexutil.EncodeUint64(r.stateDB.GetNonce(to))}, false},
+				Code:  &Star{Interior{From: hexutil.Encode(r.stateDB.GetCode(to))}, false}}
+		}
+		if _, ok := r.ReturnObj[addr].Storage[storageHash]; !ok {
+			r.ReturnObj[addr].Storage[storageHash] = &Star{Interior{From: storageFrom}, false}
+		}
+	}
 }
 func (r *SDTracerService) CaptureFault(pc uint64, op core.OpCode, gas, cost uint64, scope core.ScopeContext, depth int, err error) {
 	if len(r.storageValuesSlice) > 0 {
@@ -200,24 +201,24 @@ func (r *SDTracerService) CaptureEnter(typ core.OpCode, from core.Address, to co
 			Balance: &Star{Interior{
 				From: hexutil.EncodeBig(r.stateDB.GetBalance(to))}, false},
 			Nonce: &Star{Interior{From: hexutil.EncodeUint64(r.stateDB.GetNonce(to))}, false},
-			Code: &Star{Interior{From: hexutil.Encode(r.stateDB.GetCode(to))}, false}}
+			Code:  &Star{Interior{From: hexutil.Encode(r.stateDB.GetCode(to))}, false}}
 	}
 }
 func (r *SDTracerService) CaptureExit(output []byte, gasUsed uint64, err error) {
 	if len(r.storageValuesSlice) > 1 {
-		for k, v := range r.storageValuesSlice[len(r.storageValuesSlice) - 1]  {
-    r.storageValuesSlice[len(r.storageValuesSlice) - 2][k] = v
-}
-	r.storageValuesSlice = r.storageValuesSlice[:len(r.storageValuesSlice)-1]
+		for k, v := range r.storageValuesSlice[len(r.storageValuesSlice)-1] {
+			r.storageValuesSlice[len(r.storageValuesSlice)-2][k] = v
+		}
+		r.storageValuesSlice = r.storageValuesSlice[:len(r.storageValuesSlice)-1]
 	}
 }
 func (r *SDTracerService) Result() (interface{}, error) {
-	 minerDiff := new(big.Int).Sub(r.stateDB.GetBalance(r.Miner), r.MinerInitBalance)
-	 if len(r.storageValuesMap) > 0 {
-	 for k, v := range r.storageValuesSlice[0] {
-		 r.ReturnObj[k[0]].Storage[k[1]].Interior.To = v
-	 }
-}
+	minerDiff := new(big.Int).Sub(r.stateDB.GetBalance(r.Miner), r.MinerInitBalance)
+	if len(r.storageValuesMap) > 0 {
+		for k, v := range r.storageValuesSlice[0] {
+			r.ReturnObj[k[0]].Storage[k[1]].Interior.To = v
+		}
+	}
 	for addrHex, account := range r.ReturnObj {
 		addr := core.HexToAddress(addrHex)
 		account.Balance.Interior.To = hexutil.EncodeBig(r.stateDB.GetBalance(addr))
@@ -231,13 +232,13 @@ func (r *SDTracerService) Result() (interface{}, error) {
 			if data.Interior.To == data.Interior.From || data.Interior.To == "" {
 				delete(account.Storage, storageHash)
 			}
-			}
+		}
 
 		if account.Nonce.Interior.To == account.Nonce.Interior.From && account.Balance.Interior.To == account.Balance.Interior.From && account.Code.Interior.To == account.Code.Interior.From && len(account.Storage) == 0 {
 			delete(r.ReturnObj, addrHex)
 		}
 
-		 if account.Balance.Interior.From == "0x0" && hexutil.Encode(r.stateDB.GetCode(addr)) == "0x" && r.stateDB.GetNonce(addr) == 0 {
+		if account.Balance.Interior.From == "0x0" && hexutil.Encode(r.stateDB.GetCode(addr)) == "0x" && r.stateDB.GetNonce(addr) == 0 {
 			account.Balance.New = true
 			account.Nonce.New = true
 			account.Code.New = true

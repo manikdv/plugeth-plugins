@@ -7,7 +7,6 @@ import (
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
-
 type InnerResult struct {
 	Address string `json:"address,omitempty"`
 	Code    string `json:"code,omitempty"`
