@@ -69,6 +69,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	calls := FilterPrecompileCalls(gr.Calls)
 	addr := make([]int, len(address))
 	copy(addr[:], address)
+
 	if string(gr.GasUsed) == "" {
 		gr.GasUsed = "0x0"
 	}
@@ -81,23 +82,15 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	unique := 0
 	if gr.Error == "execution reverted" {
 		unique = 1
-	}
-	if gr.Type == "CREATE" || gr.Type == "CREATE2" {
+	} else if gr.Error == "contract creation code storage out of gas" {
+		unique = 3
+	} else if gr.Error == "max code size exceeded" {
+		unique = 3
+	} else if gr.Type == "CREATE" || gr.Type == "CREATE2" {
 		unique = 2
-	}
-	// if gr.Gas <= gr.GasUsed
-	if gr.Error == "max code size exceeded" {
-		unique = 3
-	}
-	if gr.Type == "SELFDESTRUCT" {
+	} else if gr.Type == "SELFDESTRUCT" {
 		unique = 4
-	}
-	if gr.Type == "SELFDESTRUCT" {
-		unique = 4
-	}
-	if gr.Type == "contract creation code storage out of gas" {
-		unique = 3
-	}
+  }
 
 	switch unique {
 	case 0:
