@@ -92,6 +92,13 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	if gr.Type == "SELFDESTRUCT" {
 		unique = 4
 	}
+	if gr.Type == "SELFDESTRUCT" {
+		unique = 4
+	}
+	if gr.Type == "contract creation code storage out of gas" {
+		unique = 3
+	}
+
 	switch unique {
 	case 0:
 		result = append(result, &ParityResult{
