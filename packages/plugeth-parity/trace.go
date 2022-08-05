@@ -90,6 +90,8 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 		unique = 3
 	} else if strings.HasPrefix(gr.Error, "stack underflow") {
 		unique = 5
+	} else if strings.HasPrefix(gr.Error, "invalid opcode") {
+		unique = 6
 	} else if gr.Type == "CREATE" || gr.Type == "CREATE2" {
 		unique = 2
 	} else if gr.Type == "SELFDESTRUCT" {
@@ -172,6 +174,18 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 				Init:  gr.Input,
 				Value: gr.Value},
 			Error:         "Stack undeflow",
+			SubTraces:     len(calls),
+			TracerAddress: addr,
+			Type:          t})
+
+	case 6:
+		result = append(result, &ParityResult{
+			Action: &Action{
+				From:  gr.From,
+				Gas:   gr.Gas,
+				Init:  gr.Input,
+				Value: gr.Value},
+			Error:         "Bad instruction",
 			SubTraces:     len(calls),
 			TracerAddress: addr,
 			Type:          t})
