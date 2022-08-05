@@ -86,11 +86,15 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 		unique = 3
 	} else if gr.Error == "max code size exceeded" {
 		unique = 3
+	} else if gr.Error == "out of gas" {
+		unique = 3
+	} else if strings.HasPrefix(gr.Error, "stack underflow") {
+		unique = 5
 	} else if gr.Type == "CREATE" || gr.Type == "CREATE2" {
 		unique = 2
 	} else if gr.Type == "SELFDESTRUCT" {
 		unique = 4
-  }
+	}
 
 	switch unique {
 	case 0:
@@ -159,6 +163,18 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			SubTraces:     len(calls),
 			TracerAddress: addr,
 			Type:          "suicide"})
+
+	case 5:
+		result = append(result, &ParityResult{
+			Action: &Action{
+				From:  gr.From,
+				Gas:   gr.Gas,
+				Init:  gr.Input,
+				Value: gr.Value},
+			Error:         "Stack undeflow",
+			SubTraces:     len(calls),
+			TracerAddress: addr,
+			Type:          t})
 	}
 
 	for i, call := range calls {
