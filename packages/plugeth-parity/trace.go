@@ -88,6 +88,8 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 		unique = 3
 	} else if gr.Error == "out of gas" {
 		unique = 3
+	} else if strings.HasPrefix(gr.Error, "gas") {
+		unique = 3
 	} else if strings.HasPrefix(gr.Error, "stack underflow") {
 		unique = 5
 	} else if strings.HasPrefix(gr.Error, "invalid opcode") {
