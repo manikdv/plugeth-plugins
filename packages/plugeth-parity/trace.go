@@ -132,7 +132,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			Error:         "Reverted",
 			SubTraces:     len(calls),
 			TracerAddress: addr,
-			Type:          t})
+			Type:          strings.ToLower(gr.Type)})
 
 	case 2:
 		result = append(result, &ParityResult{
