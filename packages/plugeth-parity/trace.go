@@ -99,7 +99,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 		unique = 2
 	} else if gr.Type == "SELFDESTRUCT" {
 		unique = 4
-	} else if gr.Type == "STATICCALL" {
+	} else if gr.Type == "STATICCALL" || gr.Type == "CALL" {
 		unique = 7
 	}
 
