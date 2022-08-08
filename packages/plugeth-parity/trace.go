@@ -136,6 +136,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	case 2:
 		result = append(result, &ParityResult{
 			Action: &Action{
+				CallType: strings.ToLower(gr.Type),
 				From:  gr.From,
 				Gas:   gr.Gas,
 				Init:  gr.Input,
