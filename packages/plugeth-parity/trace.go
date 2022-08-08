@@ -95,12 +95,14 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 		unique = 5
 	} else if strings.HasPrefix(gr.Error, "invalid opcode") {
 		unique = 6
+  } else if gr.Error == "invalid jump destination" {
+		unique = 7
 	} else if gr.Type == "CREATE" || gr.Type == "CREATE2" {
 		unique = 2
 	} else if gr.Type == "SELFDESTRUCT" {
 		unique = 4
-	} else if gr.Type == "STATICCALL" || gr.Type == "CALL" || gr.Type == "DELEGATECALL"{
-		unique = 7
+	} else if gr.Type == "STATICCALL" || gr.Type == "CALL" || gr.Type == "DELEGATECALL" {
+		unique = 8
 	}
 
 	switch unique {
@@ -206,6 +208,20 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			Type:          t})
 
 	case 7:
+		result = append(result, &ParityResult{
+			Action: &Action{
+				CallType: strings.ToLower(gr.Type),
+				From:     gr.From,
+				Gas:      gr.Gas,
+				Input:    gr.Input,
+				To:       gr.To,
+				Value:    gr.Value},
+			Error:         "Bad jump destination",
+			SubTraces:     len(calls),
+			TracerAddress: addr,
+			Type:          t})
+
+	case 8:
 		result = append(result, &ParityResult{
 			Action: &Action{
 				CallType: strings.ToLower(gr.Type),
