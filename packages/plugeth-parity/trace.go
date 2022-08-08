@@ -156,6 +156,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 				From:  gr.From,
 				Gas:   gr.Gas,
 				Init:  gr.Input,
+				Input:  gr.Input,
 				Value: gr.Value},
 			Error:         "Out of gas",
 			SubTraces:     len(calls),
