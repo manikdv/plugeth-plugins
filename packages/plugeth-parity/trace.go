@@ -154,9 +154,10 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			Action: &Action{
 				CallType: strings.ToLower(gr.Type),
 				From:  gr.From,
+				To:    gr.To,
 				Gas:   gr.Gas,
 				Init:  gr.Input,
-				Input:  gr.Input,
+				Input: gr.Input,
 				Value: gr.Value},
 			Error:         "Out of gas",
 			SubTraces:     len(calls),
