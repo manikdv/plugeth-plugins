@@ -79,6 +79,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	if gr.Value == "" {
 		gr.Value = "0x0"
 	}
+
 	unique := 0
 	if gr.Error == "execution reverted" {
 		unique = 1
@@ -98,17 +99,20 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 		unique = 2
 	} else if gr.Type == "SELFDESTRUCT" {
 		unique = 4
+	} else if gr.Type == "STATICCALL" {
+		unique = 7
 	}
 
 	switch unique {
 	case 0:
 		result = append(result, &ParityResult{
-			Action: &Action{CallType: strings.ToLower(gr.Type),
-				From:  gr.From,
-				Gas:   gr.Gas,
-				Input: gr.Input,
-				To:    gr.To,
-				Value: gr.Value},
+			Action: &Action{
+				CallType: strings.ToLower(gr.Type),
+				From:     gr.From,
+				Gas:      gr.Gas,
+				Input:    gr.Input,
+				To:       gr.To,
+				Value:    gr.Value},
 			Result: &InnerResult{GasUsed: gr.GasUsed,
 				Output: gr.Output},
 			SubTraces:     len(calls),
@@ -117,12 +121,13 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 
 	case 1:
 		result = append(result, &ParityResult{
-			Action: &Action{CallType: strings.ToLower(gr.Type),
-				From:  gr.From,
-				Gas:   gr.Gas,
-				Input: gr.Input,
-				To:    gr.To,
-				Value: gr.Value},
+			Action: &Action{
+				CallType: strings.ToLower(gr.Type),
+				From:     gr.From,
+				Gas:      gr.Gas,
+				Input:    gr.Input,
+				To:       gr.To,
+				Value:    gr.Value},
 			Error:         "Reverted",
 			SubTraces:     len(calls),
 			TracerAddress: addr,
@@ -191,6 +196,23 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			SubTraces:     len(calls),
 			TracerAddress: addr,
 			Type:          t})
+
+	case 7:
+		result = append(result, &ParityResult{
+			Action: &Action{
+				CallType: strings.ToLower(gr.Type),
+				From:     gr.From,
+				Gas:      gr.Gas,
+				Input:    gr.Input,
+				To:       gr.To,
+				Value:    gr.Value},
+			Result: &InnerResult{
+				Address: gr.To,
+				GasUsed: gr.GasUsed,
+			},
+			SubTraces:     len(calls),
+			TracerAddress: addr,
+			Type:          "call"})
 	}
 
 	for i, call := range calls {
