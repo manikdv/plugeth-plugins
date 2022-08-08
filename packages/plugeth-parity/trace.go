@@ -126,6 +126,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 				From:     gr.From,
 				Gas:      gr.Gas,
 				Input:    gr.Input,
+				Init:     gr.Input,
 				To:       gr.To,
 				Value:    gr.Value},
 			Error:         "Reverted",
