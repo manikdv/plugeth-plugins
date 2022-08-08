@@ -179,10 +179,12 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	case 5:
 		result = append(result, &ParityResult{
 			Action: &Action{
-				From:  gr.From,
-				Gas:   gr.Gas,
-				Init:  gr.Input,
-				Value: gr.Value},
+			CallType: strings.ToLower(gr.Type),
+				From:     gr.From,
+				Gas:      gr.Gas,
+				Input:    gr.Input,
+				To:       gr.To,
+				Value:    gr.Value},
 			Error:         "Stack undeflow",
 			SubTraces:     len(calls),
 			TracerAddress: addr,
@@ -191,10 +193,12 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	case 6:
 		result = append(result, &ParityResult{
 			Action: &Action{
-				From:  gr.From,
-				Gas:   gr.Gas,
-				Init:  gr.Input,
-				Value: gr.Value},
+				CallType: strings.ToLower(gr.Type),
+				From:     gr.From,
+				Gas:      gr.Gas,
+				Input:    gr.Input,
+				To:       gr.To,
+				Value:    gr.Value},
 			Error:         "Bad instruction",
 			SubTraces:     len(calls),
 			TracerAddress: addr,
