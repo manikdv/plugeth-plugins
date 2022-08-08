@@ -207,7 +207,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 				To:       gr.To,
 				Value:    gr.Value},
 			Result: &InnerResult{
-				Address: gr.To,
+				Output:  gr.Output,
 				GasUsed: gr.GasUsed,
 			},
 			SubTraces:     len(calls),
