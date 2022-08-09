@@ -81,28 +81,14 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 	}
 
 	unique := 0
-	if gr.Error == "execution reverted" {
+	if gr.Error != "" {
 		unique = 1
-	} else if gr.Error == "contract creation code storage out of gas" {
-		unique = 3
-	} else if gr.Error == "max code size exceeded" {
-		unique = 3
-	} else if gr.Error == "out of gas" {
-		unique = 3
-	} else if strings.HasPrefix(gr.Error, "gas") {
-		unique = 3
-	} else if strings.HasPrefix(gr.Error, "stack underflow") {
-		unique = 5
-	} else if strings.HasPrefix(gr.Error, "invalid opcode") {
-		unique = 6
-  } else if gr.Error == "invalid jump destination" {
-		unique = 7
 	} else if gr.Type == "CREATE" || gr.Type == "CREATE2" {
 		unique = 2
 	} else if gr.Type == "SELFDESTRUCT" {
-		unique = 4
+		unique = 3
 	} else if gr.Type == "STATICCALL" || gr.Type == "CALL" || gr.Type == "DELEGATECALL" {
-		unique = 8
+		unique = 4
 	}
 
 	switch unique {
@@ -122,19 +108,8 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			Type:          t})
 
 	case 1:
-		result = append(result, &ParityResult{
-			Action: &Action{
-				CallType: strings.ToLower(gr.Type),
-				From:     gr.From,
-				Gas:      gr.Gas,
-				Input:    gr.Input,
-				Init:     gr.Input,
-				To:       gr.To,
-				Value:    gr.Value},
-			Error:         "Reverted",
-			SubTraces:     len(calls),
-			TracerAddress: addr,
-			Type:          strings.ToLower(gr.Type)})
+    error_result := GethError(gr, calls, addr)
+		result = append(result, &error_result)
 
 	case 2:
 		result = append(result, &ParityResult{
@@ -153,21 +128,6 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			Type:          "create"})
 
 	case 3:
-		result = append(result, &ParityResult{
-			Action: &Action{
-				CallType: strings.ToLower(gr.Type),
-				From:  gr.From,
-				To:    gr.To,
-				Gas:   gr.Gas,
-				Init:  gr.Input,
-				Input: gr.Input,
-				Value: gr.Value},
-			Error:         "Out of gas",
-			SubTraces:     len(calls),
-			TracerAddress: addr,
-			Type:          t})
-
-	case 4:
 		balance := gr.Value
 		result = append(result, &ParityResult{
 			Action: &Action{
@@ -179,49 +139,7 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 			TracerAddress: addr,
 			Type:          "suicide"})
 
-	case 5:
-		result = append(result, &ParityResult{
-			Action: &Action{
-			CallType: strings.ToLower(gr.Type),
-				From:     gr.From,
-				Gas:      gr.Gas,
-				Input:    gr.Input,
-				To:       gr.To,
-				Value:    gr.Value},
-			Error:         "Stack undeflow",
-			SubTraces:     len(calls),
-			TracerAddress: addr,
-			Type:          t})
-
-	case 6:
-		result = append(result, &ParityResult{
-			Action: &Action{
-				CallType: strings.ToLower(gr.Type),
-				From:     gr.From,
-				Gas:      gr.Gas,
-				Input:    gr.Input,
-				To:       gr.To,
-				Value:    gr.Value},
-			Error:         "Bad instruction",
-			SubTraces:     len(calls),
-			TracerAddress: addr,
-			Type:          t})
-
-	case 7:
-		result = append(result, &ParityResult{
-			Action: &Action{
-				CallType: strings.ToLower(gr.Type),
-				From:     gr.From,
-				Gas:      gr.Gas,
-				Input:    gr.Input,
-				To:       gr.To,
-				Value:    gr.Value},
-			Error:         "Bad jump destination",
-			SubTraces:     len(calls),
-			TracerAddress: addr,
-			Type:          t})
-
-	case 8:
+	case 4:
 		result = append(result, &ParityResult{
 			Action: &Action{
 				CallType: strings.ToLower(gr.Type),
@@ -246,6 +164,66 @@ func GethParity(gr GethResponse, address []int, t string) []*ParityResult {
 		result = append(result, GethParity(call, append(address, i), t)...)
 	}
 	return result
+}
+
+func GethError(gr GethResponse, calls []GethResponse, addr []int) ParityResult {
+  result := ParityResult{}
+
+	if gr.Type == "CREATE" || gr.Type == "CREATE2" {
+    result = ParityResult{
+			Action: &Action{
+				From:  gr.From,
+				Gas:   gr.Gas,
+				Init:  gr.Input,
+				Value: gr.Value},
+			Error:         FormatGethError(gr.Error),
+			SubTraces:     len(calls),
+			TracerAddress: addr,
+			Type:          "create",
+		}
+	} else {
+    result = ParityResult{
+			Action: &Action{
+				CallType: strings.ToLower(gr.Type),
+				From:     gr.From,
+				To:       gr.To,
+				Gas:      gr.Gas,
+				Input:    gr.Input,
+				Value:    gr.Value},
+			Error:         FormatGethError(gr.Error),
+			SubTraces:     len(calls),
+			TracerAddress: addr,
+			Type:          "call"}
+	}
+
+	return result
+}
+
+func FormatGethError(err string) string {
+	error := "Unknown error"
+
+	switch err {
+	case "execution reverted":
+		error = "Reverted"
+	case "contract creation code storage out of gas":
+		error = "Out of gas"
+	case "max code size exceeded":
+		error = "Out of gas"
+	case "out of gas":
+		error = "Out of gas"
+	case "invalid jump destination":
+		error = "Bad jump destination"
+	default:
+		if strings.HasPrefix(err, "gas") {
+			error = "Out of gas"
+		} else if strings.HasPrefix(err, "stack underflow") {
+			error = "Stack underflow"
+		} else if strings.HasPrefix(err, "invalid opcode") {
+			error = "Bad instruction"
+		}
+	}
+
+	return error
 }
 
 func (tr *ParityTrace) TraceVariantCall(ctx context.Context, txObject map[string]interface{}, bkNum string) ([]*ParityResult, string, error) {
